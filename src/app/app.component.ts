@@ -1,26 +1,16 @@
 import {Component} from '@angular/core';
 import { Hero } from './hero';
-
-const HEROES: Hero[] = [
-    {id: 11, name: 'Mr. Nice'},
-    {id: 12, name: 'Narco'},
-    {id: 13, name: 'Bombasto'},
-    {id: 14, name: 'Celeritas'},
-    {id: 15, name: 'Magneta'},
-    {id: 16, name: 'RubberMan'},
-    {id: 17, name: 'Dynama'},
-    {id: 18, name: 'Dr IQ'},
-    {id: 19, name: 'Magma'},
-    {id: 20, name: 'Tornado'}
-];
+import {HeroService} from './hero.service';
+import {OnInit} from '@angular/core';
 
 @Component({
     selector: 'app-root',
     //templateUrl: './app.component.html',
     template: `
     <h1>{{title}}</h1>
-    <h2>My heroesl</h2>
+    <h2>My heroes</h2>
     <ul class="heroes">
+        <div *ngIf="!heroes">Loading...</div>
         <li *ngFor="let hero of heroes" (click)="onSelect(hero)" [class.selected]="hero === selectedHero">
             <span class="badge">{{hero.id}}</span> {{hero.name}}
         </li>
@@ -76,12 +66,30 @@ const HEROES: Hero[] = [
     margin-right: .8em;
     border-radius: 4px 0 0 4px;
   }
-`]
+`] ,
+    // Indique à Angular qu'il doit créer une instance de HeroService à la création du composant
+    providers: [HeroService]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
     title = 'Tour of Heroes';
-    heroes = HEROES;
+    heroes: Hero[];
     selectedHero: Hero;
+
+    /** Permet de donner une instance de HeroService à la création du composant.
+     * Evite d'avoir à faire un new HeroService qui est dégueu car plusieurs composants
+     * auront besoin d'accéder à ce service. Bien penser à ajouter le HeroService dans les
+     * providers, au sein de la metadata du composant.
+     * @param heroService
+     */
+    constructor(private heroService: HeroService) {}
+
+    /**
+     * Ne pas écrire de traitement dans le constructeur !
+     * Du coup on peut écrire ces traitements dans le on init
+     */
+    ngOnInit(): void {
+        this.getHeroes();
+    }
 
     onSelect(hero: Hero): void {
         this.selectedHero = hero;
@@ -89,5 +97,13 @@ export class AppComponent {
 
     removeSelectedHero(): void {
         this.selectedHero = null;
+    }
+
+    getHeroes(): void {
+        // On utilise le système de Promise. La récupération des données se fait de
+        // manière asynchrone
+        //this.heroService.getHeroes().then(heroes => this.heroes = heroes);
+        // On simule un temps d'accès long au serveur pour afficher un message de loading
+        this.heroService.getHeroesSlowly().then(heroes => this.heroes = heroes);
     }
 }
